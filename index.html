@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMSight — Intelligence Dashboard for PMS Firms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:     #0a1628;
+  --ink2:    #142240;
+  --ink3:    #1e3260;
+  --gold:    #c9a84c;
+  --gold2:   #e8c96a;
+  --emerald: #10b981;
+  --sky:     #38bdf8;
+  --slate:   #94a3b8;
+  --border:  rgba(201,168,76,.18);
+  --surface: rgba(255,255,255,.03);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+#features,#how,#pricing,#tester{scroll-margin-top:80px;}
+body{font-family:'DM Sans',sans-serif;background:var(--ink);color:#e2e8f0;overflow-x:hidden;}
+
+/* ── NOISE TEXTURE ── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4;}
+
+/* ── GRID LINES ── */
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);
+  background-size:60px 60px;}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(10,22,40,.8);}
+.nav-logo{font-family:'Playfair Display',serif;font-size:22px;color:#fff;letter-spacing:-.3px;}
+.nav-logo span{color:var(--gold);}
+.nav-links{display:flex;align-items:center;gap:32px;}
+.nav-links a{color:var(--slate);font-size:14px;font-weight:500;text-decoration:none;transition:.2s;}
+.nav-links a:hover{color:#fff;}
+.nav-cta{background:var(--gold);color:var(--ink);padding:10px 24px;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none;transition:.2s;letter-spacing:.2px;}
+.nav-cta:hover{background:var(--gold2);color:var(--ink);}
+
+/* ── STICKY SIGNUP BAR ── */
+#stickyBar{position:fixed;top:0;left:0;right:0;z-index:99;background:rgba(10,22,40,.97);border-bottom:1px solid rgba(201,168,76,.2);padding:10px 40px;display:flex;align-items:center;justify-content:space-between;gap:16px;backdrop-filter:blur(10px);transform:translateY(-100%);transition:transform .35s ease;}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 40px 80px;position:relative;z-index:1;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,.1);border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:600;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:32px;}
+.hero-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.4);}}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(42px,6vw,80px);line-height:1.05;color:#fff;margin-bottom:24px;max-width:900px;}
+.hero h1 em{color:var(--gold);font-style:italic;}
+.hero-sub{font-size:18px;color:var(--slate);max-width:580px;line-height:1.7;margin-bottom:48px;font-weight:400;}
+.hero-btns{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;}
+.btn-primary{background:var(--gold);color:var(--ink);padding:16px 36px;border-radius:8px;font-size:15px;font-weight:700;text-decoration:none;transition:.2s;letter-spacing:.2px;border:none;cursor:pointer;}
+.btn-primary:hover{background:var(--gold2);transform:translateY(-1px);}
+.btn-secondary{background:transparent;color:#fff;padding:15px 32px;border-radius:8px;font-size:15px;font-weight:500;text-decoration:none;border:1px solid rgba(255,255,255,.2);transition:.2s;}
+.btn-secondary:hover{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.05);}
+.hero-note{margin-top:20px;font-size:12px;color:var(--slate);}
+.hero-note span{color:var(--gold);}
+
+/* ── SCROLL INDICATOR ── */
+.scroll-hint{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--slate);font-size:11px;letter-spacing:1px;text-transform:uppercase;}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,transparent,var(--gold));animation:scrollLine 2s infinite;}
+@keyframes scrollLine{0%{opacity:0;transform:scaleY(0);transform-origin:top;}50%{opacity:1;transform:scaleY(1);}100%{opacity:0;transform:scaleY(1);transform-origin:bottom;}}
+
+/* ── STATS BAR ── */
+.stats-bar{background:var(--ink2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:32px 60px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;position:relative;z-index:1;}
+.stat-item{text-align:center;}
+.stat-num{font-family:'Playfair Display',serif;font-size:36px;color:var(--gold);line-height:1;margin-bottom:6px;}
+.stat-label{font-size:12px;color:var(--slate);letter-spacing:.5px;text-transform:uppercase;font-weight:500;}
+
+/* ── SECTION ── */
+section{padding:100px 60px;position:relative;z-index:1;max-width:1200px;margin:0 auto;}
+.section-tag{font-size:11px;font-weight:600;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px;}
+.section-title{font-family:'Playfair Display',serif;font-size:clamp(32px,4vw,52px);color:#fff;line-height:1.1;margin-bottom:20px;}
+.section-title em{color:var(--gold);font-style:italic;}
+.section-sub{font-size:16px;color:var(--slate);max-width:560px;line-height:1.7;}
+
+/* ── BROWSER MOCKUP ── */
+.mockup-wrap{padding:80px 40px 0;position:relative;z-index:1;}
+.mockup-label{text-align:center;margin-bottom:40px;}
+.browser-frame{max-width:1100px;margin:0 auto;border-radius:16px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.6),0 0 0 1px rgba(201,168,76,.15);background:var(--ink2);}
+.browser-chrome{background:#1a2f48;padding:14px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06);}
+.browser-dots{display:flex;gap:7px;}
+.b-dot{width:12px;height:12px;border-radius:50%;}
+.bd-red{background:#ff5f57;}
+.bd-yellow{background:#ffbd2e;}
+.bd-green{background:#28c840;}
+.browser-bar{flex:1;background:rgba(255,255,255,.06);border-radius:6px;padding:6px 14px;display:flex;align-items:center;gap:8px;margin:0 16px;}
+.browser-bar-lock{font-size:11px;opacity:.4;}
+.browser-bar-url{font-family:'DM Mono',monospace;font-size:11px;color:var(--slate);}
+.browser-live{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:var(--emerald);background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);padding:3px 10px;border-radius:20px;}
+.b-live-dot{width:5px;height:5px;border-radius:50%;background:var(--emerald);animation:pulse 1.5s infinite;}
+.browser-body{padding:0;}
+/* Dashboard preview inside browser */
+.dash-topbar{background:#0d1b2a;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.06);}
+.dash-logo{font-family:'DM Mono',monospace;font-size:13px;color:#fff;display:flex;align-items:center;gap:8px;}
+.dash-pill{background:#10b981;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.5px;}
+.dash-tabs{display:flex;gap:1px;background:#1a2f45;padding:0 20px;overflow:hidden;}
+.dash-tab{padding:10px 16px;font-size:11px;color:rgba(255,255,255,.45);cursor:default;white-space:nowrap;border-bottom:2px solid transparent;}
+.dash-tab.active{color:#fff;border-bottom-color:#10b981;}
+.dash-content{padding:20px;background:#f1f5f9;}
+.dash-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+.dash-kpi{background:#fff;border-radius:10px;padding:14px 16px;border-left:3px solid #10b981;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.dash-kpi:nth-child(2){border-left-color:#0ea5e9;}
+.dash-kpi:nth-child(3){border-left-color:#f59e0b;}
+.dash-kpi:nth-child(4){border-left-color:#8b5cf6;}
+.dash-kpi:nth-child(5){border-left-color:#f43f5e;}
+.dk-label{font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:5px;}
+.dk-val{font-size:16px;font-weight:700;color:#0d1b2a;margin-bottom:2px;}
+.dk-chg{font-size:9px;color:#10b981;font-weight:600;}
+.dash-charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.dash-chart{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.dc-title{font-size:10px;color:#64748b;font-weight:600;margin-bottom:10px;}
+.dc-bars{display:flex;align-items:flex-end;gap:5px;height:70px;}
+.dc-bar{flex:1;border-radius:2px 2px 0 0;}
+
+/* ── FEATURES ── */
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px;}
+.feat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px;transition:.3s;position:relative;overflow:hidden;}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:.3s;}
+.feat-card:hover{background:rgba(255,255,255,.05);transform:translateY(-4px);}
+.feat-card:hover::before{opacity:1;}
+.feat-icon{width:48px;height:48px;border-radius:12px;background:rgba(201,168,76,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:20px;}
+.feat-title{font-size:17px;font-weight:600;color:#fff;margin-bottom:10px;}
+.feat-desc{font-size:14px;color:var(--slate);line-height:1.7;}
+
+/* ── HOW IT WORKS ── */
+.how-wrap{background:var(--ink2);border:1px solid var(--border);border-radius:20px;padding:60px;margin-top:60px;max-width:1200px;margin-left:auto;margin-right:auto;}
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:48px;}
+.how-step{position:relative;}
+.how-step:not(:last-child)::after{content:'→';position:absolute;right:-24px;top:20px;font-size:24px;color:var(--gold);opacity:.4;}
+.how-num{font-family:'DM Mono',monospace;font-size:48px;font-weight:500;color:rgba(201,168,76,.15);line-height:1;margin-bottom:16px;}
+.how-title{font-size:17px;font-weight:600;color:#fff;margin-bottom:8px;}
+.how-desc{font-size:14px;color:var(--slate);line-height:1.7;}
+
+/* ── PRICING ── */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px;}
+.price-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px;position:relative;transition:.3s;}
+.price-card.featured{background:rgba(201,168,76,.06);border-color:var(--gold);transform:scale(1.03);}
+.price-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink);font-size:11px;font-weight:700;padding:4px 16px;border-radius:20px;white-space:nowrap;letter-spacing:.5px;}
+.price-tier{font-size:13px;font-weight:600;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;}
+.price-amount{font-family:'Playfair Display',serif;font-size:48px;color:#fff;line-height:1;margin-bottom:4px;}
+.price-amount span{font-size:20px;vertical-align:top;margin-top:8px;display:inline-block;font-family:'DM Sans',sans-serif;font-weight:400;}
+.price-period{font-size:13px;color:var(--slate);margin-bottom:24px;}
+.price-features{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:32px;}
+.price-features li{font-size:14px;color:var(--slate);display:flex;align-items:center;gap:10px;}
+.price-features li::before{content:'✓';color:var(--gold);font-weight:700;flex-shrink:0;}
+.price-cta{display:block;text-align:center;padding:14px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:.2s;}
+.price-cta-gold{background:var(--gold);color:var(--ink);}
+.price-cta-gold:hover{background:var(--gold2);}
+.price-cta-outline{border:1px solid var(--border);color:#fff;}
+.price-cta-outline:hover{border-color:var(--gold);color:var(--gold);}
+
+/* ── TESTIMONIAL ── */
+.testimonial-wrap{background:var(--ink2);border:1px solid var(--border);border-radius:20px;padding:60px;text-align:center;max-width:800px;margin:60px auto 0;}
+.t-quote{font-family:'Playfair Display',serif;font-size:clamp(20px,3vw,28px);color:#fff;line-height:1.5;font-style:italic;margin-bottom:32px;}
+.t-quote em{color:var(--gold);}
+.t-author{font-size:14px;color:var(--slate);}
+.t-author strong{color:#fff;}
+
+/* ── CTA SECTION ── */
+.cta-section{text-align:center;padding:100px 40px;position:relative;z-index:1;}
+.cta-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(201,168,76,.08) 0%,transparent 70%);pointer-events:none;}
+.cta-section h2{font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,64px);color:#fff;margin-bottom:20px;}
+.cta-section h2 em{color:var(--gold);font-style:italic;}
+.cta-section p{font-size:17px;color:var(--slate);margin-bottom:48px;max-width:500px;margin-left:auto;margin-right:auto;}
+.tester-form{display:flex;gap:12px;max-width:480px;margin:0 auto 16px;flex-wrap:wrap;justify-content:center;}
+.tester-form input{flex:1;min-width:240px;padding:14px 20px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:.2s;}
+.tester-form input::placeholder{color:var(--slate);}
+.tester-form input:focus{border-color:var(--gold);background:rgba(201,168,76,.05);}
+.tester-form button{background:var(--gold);color:var(--ink);padding:14px 28px;border-radius:8px;border:none;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;font-family:'DM Sans',sans-serif;}
+.tester-form button:hover{background:var(--gold2);}
+.form-note{font-size:12px;color:var(--slate);}
+.success-msg{display:none;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);color:var(--emerald);padding:32px 28px;border-radius:12px;font-size:14px;max-width:520px;margin:0 auto;}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding:40px 60px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;}
+.footer-logo{font-family:'Playfair Display',serif;font-size:18px;color:#fff;}
+.footer-logo span{color:var(--gold);}
+.footer-copy{font-size:12px;color:var(--slate);}
+.footer-links{display:flex;gap:24px;}
+.footer-links a{font-size:12px;color:var(--slate);text-decoration:none;}
+.footer-links a:hover{color:var(--gold);}
+
+/* ── NO fade-up — sections always visible ── */
+.fade-up{opacity:1;transform:none;}
+
+@media(max-width:900px){
+  nav{padding:16px 24px;}
+  .nav-links{display:none;}
+  section{padding:60px 24px;}
+  .stats-bar{padding:24px;grid-template-columns:repeat(2,1fr);}
+  .features-grid,.pricing-grid{grid-template-columns:1fr;}
+  .how-steps{grid-template-columns:1fr;}
+  .how-step::after{display:none;}
+  .price-card.featured{transform:none;}
+  .dash-kpis{grid-template-columns:repeat(2,1fr);}
+  .dash-charts{grid-template-columns:1fr;}
+  footer{flex-direction:column;gap:16px;text-align:center;padding:32px 24px;}
+  .how-wrap{padding:32px 24px;}
+  #stickyBar{padding:10px 16px;}
+}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">PMS<span>ight</span></div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <a href="product.html" class="nav-cta">View Live Demo →</a>
+</nav>
+
+<!-- STICKY SIGNUP BAR (slides down after scrolling 500px) -->
+<div id="stickyBar">
+  <div style="font-size:14px;color:#e2e8f0;font-weight:500;">PMSight — Live P&L Dashboard for PMS Firms</div>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+    <input type="email" id="stickyEmail" placeholder="your@pmsfirm.com"
+      style="padding:8px 14px;border-radius:6px;border:1px solid rgba(201,168,76,.3);background:rgba(255,255,255,.06);color:#fff;font-size:13px;width:220px;outline:none;font-family:'DM Sans',sans-serif;">
+    <button onclick="joinBetaSticky()"
+      style="background:#c9a84c;color:#0a1628;border:none;padding:8px 20px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;">
+      Get Free Access
+    </button>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">
+    <div class="hero-eyebrow-dot"></div>
+    Now in beta · Free for first 10 firms
+  </div>
+  <h1>Your PMS firm's<br><em>profit engine</em>,<br>finally visible</h1>
+  <p class="hero-sub">PMSight gives portfolio management firms a live intelligence dashboard — AUM trends, P&L, RM performance, channel insights, and growth planning. All from your own data.</p>
+  <div class="hero-btns">
+    <a href="product.html" class="btn-primary">See Live Demo →</a>
+    <a href="#tester" class="btn-secondary">Join as Beta Tester</a>
+  </div>
+  <p class="hero-note">No credit card · <span>Free for first 10 firms</span> · Data stays in your Google Sheet</p>
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-num" id="stat1">5</div><div class="stat-label">Financial Years of Data</div></div>
+  <div class="stat-item"><div class="stat-num" id="stat2">10</div><div class="stat-label">Dashboard Modules</div></div>
+  <div class="stat-item"><div class="stat-num">₹0</div><div class="stat-label">To Get Started</div></div>
+  <div class="stat-item"><div class="stat-num">3 min</div><div class="stat-label">To See Your Data Live</div></div>
+</div>
+
+<!-- DASHBOARD BROWSER MOCKUP -->
+<div class="mockup-wrap">
+  <div class="mockup-label">
+    <div class="section-tag">Live Product</div>
+    <h2 class="section-title">This is what your firm looks like<br>when <em>data tells the story</em></h2>
+  </div>
+  <div class="browser-frame">
+    <!-- Browser chrome bar -->
+    <div class="browser-chrome">
+      <div class="browser-dots">
+        <div class="b-dot bd-red"></div>
+        <div class="b-dot bd-yellow"></div>
+        <div class="b-dot bd-green"></div>
+      </div>
+      <div class="browser-bar">
+        <span class="browser-bar-lock">🔒</span>
+        <span class="browser-bar-url">verdant-beignet-b5e945.netlify.app/product.html</span>
+      </div>
+      <div class="browser-live"><div class="b-live-dot"></div> LIVE</div>
+    </div>
+    <!-- Dashboard inside browser -->
+    <div class="browser-body">
+      <div class="dash-topbar">
+        <div class="dash-logo">PL Asset Management <span class="dash-pill">PRO</span></div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);">Admin — MD View &nbsp;|&nbsp; FY 2025–26 · Yearly</div>
+      </div>
+      <div class="dash-tabs">
+        <div class="dash-tab active">Summary</div>
+        <div class="dash-tab">AUM Trends</div>
+        <div class="dash-tab">Channel Insights</div>
+        <div class="dash-tab">Fees & PL Earnings</div>
+        <div class="dash-tab">Cost vs Profit</div>
+        <div class="dash-tab">Business Dev</div>
+        <div class="dash-tab">Distributors</div>
+        <div class="dash-tab">Concentration</div>
+      </div>
+      <div class="dash-content">
+        <div class="dash-kpis">
+          <div class="dash-kpi"><div class="dk-label">Total AUM</div><div class="dk-val">₹1,250 Cr</div><div class="dk-chg">↑ 26.8% YoY</div></div>
+          <div class="dash-kpi"><div class="dk-label">Total Revenue</div><div class="dk-val">₹24.6 Cr</div><div class="dk-chg">↑ 18.5% YoY</div></div>
+          <div class="dash-kpi"><div class="dk-label">Net P&L</div><div class="dk-val">₹19.2 Cr</div><div class="dk-chg">↑ 22% YoY</div></div>
+          <div class="dash-kpi"><div class="dk-label">Direct Channel</div><div class="dk-val">₹425 Cr</div><div class="dk-chg">34% of AUM</div></div>
+          <div class="dash-kpi"><div class="dk-label">Cost Coverage</div><div class="dk-val">370%</div><div class="dk-chg">Rev ÷ Cost</div></div>
+        </div>
+        <div class="dash-charts">
+          <div class="dash-chart">
+            <div class="dc-title">AUM Trend — FY 2021–22 to FY 2025–26</div>
+            <div class="dc-bars">
+              <div class="dc-bar" style="height:22%;background:rgba(201,168,76,.35);"></div>
+              <div class="dc-bar" style="height:35%;background:rgba(201,168,76,.45);"></div>
+              <div class="dc-bar" style="height:55%;background:rgba(201,168,76,.6);"></div>
+              <div class="dc-bar" style="height:74%;background:rgba(201,168,76,.75);"></div>
+              <div class="dc-bar" style="height:100%;background:#c9a84c;"></div>
+            </div>
+          </div>
+          <div class="dash-chart">
+            <div class="dc-title">Revenue vs Cost vs Net P&L — Annual</div>
+            <div class="dc-bars">
+              <div style="flex:1;display:flex;align-items:flex-end;gap:3px;height:70px;">
+                <div style="flex:1;height:28%;background:#10b981;border-radius:2px 2px 0 0;opacity:.5;"></div>
+                <div style="flex:1;height:15%;background:#f43f5e;border-radius:2px 2px 0 0;opacity:.6;"></div>
+                <div style="flex:1;height:18%;background:#0ea5e9;border-radius:2px 2px 0 0;opacity:.6;"></div>
+              </div>
+              <div style="flex:1;display:flex;align-items:flex-end;gap:3px;height:70px;">
+                <div style="flex:1;height:48%;background:#10b981;border-radius:2px 2px 0 0;opacity:.6;"></div>
+                <div style="flex:1;height:20%;background:#f43f5e;border-radius:2px 2px 0 0;opacity:.6;"></div>
+                <div style="flex:1;height:35%;background:#0ea5e9;border-radius:2px 2px 0 0;opacity:.7;"></div>
+              </div>
+              <div style="flex:1;display:flex;align-items:flex-end;gap:3px;height:70px;">
+                <div style="flex:1;height:65%;background:#10b981;border-radius:2px 2px 0 0;opacity:.7;"></div>
+                <div style="flex:1;height:23%;background:#f43f5e;border-radius:2px 2px 0 0;opacity:.6;"></div>
+                <div style="flex:1;height:52%;background:#0ea5e9;border-radius:2px 2px 0 0;opacity:.8;"></div>
+              </div>
+              <div style="flex:1;display:flex;align-items:flex-end;gap:3px;height:70px;">
+                <div style="flex:1;height:82%;background:#10b981;border-radius:2px 2px 0 0;opacity:.85;"></div>
+                <div style="flex:1;height:25%;background:#f43f5e;border-radius:2px 2px 0 0;opacity:.6;"></div>
+                <div style="flex:1;height:70%;background:#0ea5e9;border-radius:2px 2px 0 0;opacity:.85;"></div>
+              </div>
+              <div style="flex:1;display:flex;align-items:flex-end;gap:3px;height:70px;">
+                <div style="flex:1;height:100%;background:#10b981;border-radius:2px 2px 0 0;"></div>
+                <div style="flex:1;height:28%;background:#f43f5e;border-radius:2px 2px 0 0;opacity:.7;"></div>
+                <div style="flex:1;height:88%;background:#0ea5e9;border-radius:2px 2px 0 0;"></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:8px;">
+              <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#64748b;"><div style="width:8px;height:8px;background:#10b981;border-radius:2px;"></div>Revenue</div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#64748b;"><div style="width:8px;height:8px;background:#f43f5e;border-radius:2px;"></div>Cost</div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:#64748b;"><div style="width:8px;height:8px;background:#0ea5e9;border-radius:2px;"></div>Net P&L</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Click to open dashboard -->
+  <div style="text-align:center;margin-top:24px;">
+    <a href="product.html" style="display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,.1);border:1px solid var(--border);color:var(--gold);padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:.2s;" onmouseover="this.style.background='rgba(201,168,76,.2)'" onmouseout="this.style.background='rgba(201,168,76,.1)'">
+      Open Full Dashboard →
+    </a>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div>
+    <div class="section-tag">What's inside</div>
+    <h2 class="section-title">Everything a PMS firm needs<br>to understand its <em>own business</em></h2>
+    <p class="section-sub">10 modules. All your data. One dashboard that works from your own Google Sheet — no database, no IT team, no complexity.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon">📊</div>
+      <div class="feat-title">AUM Intelligence</div>
+      <div class="feat-desc">Track AUM trends across all 5 financial years. Quarter-wise, FY-wise, channel-wise. See exactly where your assets are growing and where they're at risk.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">💰</div>
+      <div class="feat-title">Revenue & P&L</div>
+      <div class="feat-desc">Management fees, performance fees, exit fees — all tracked separately. Net P&L vs cost vs revenue on one screen. Know your profitability at a glance.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🎯</div>
+      <div class="feat-title">Channel Analytics</div>
+      <div class="feat-desc">Direct, Distributor, and PL Mgmt channels compared side-by-side. Revenue, AUM, and net earnings by channel. Know which channel is truly profitable.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">👥</div>
+      <div class="feat-title">RM Performance KRA</div>
+      <div class="feat-desc">Track each Relationship Manager's AUM targets, actual achievement, client meetings, and NPS scores. Quarterly scorecards with ratings.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">💼</div>
+      <div class="feat-title">Business Viability</div>
+      <div class="feat-desc">Break-even AUM, cost coverage ratio, revenue-to-cost multiple. Adjust your cost baseline and see scenarios instantly. Know exactly how viable your business is.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔒</div>
+      <div class="feat-title">Data Stays With You</div>
+      <div class="feat-desc">Your data lives in your own Google Sheet. We never store it. Dashboard reads directly from your Sheet — no data leaves your control. SEBI-friendly architecture.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div style="padding:0 40px;position:relative;z-index:1;" id="how">
+  <div style="text-align:center;margin-bottom:0;">
+    <div class="section-tag">Simple process</div>
+    <h2 class="section-title">Live in <em>3 minutes</em></h2>
+  </div>
+  <div class="how-wrap">
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-num">01</div>
+        <div class="how-title">Get your Google Sheet template</div>
+        <div class="how-desc">We send you a pre-built Google Sheet template. Every column is labelled and ready. No Excel skills needed — just fill in your AUM, fees, costs, and RM data.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">02</div>
+        <div class="how-title">Fill in your firm's real numbers</div>
+        <div class="how-desc">Replace the dummy data with your actual figures — monthly AUM, management fees, channel splits, RM targets. Takes 30–60 minutes for a full year of data.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-num">03</div>
+        <div class="how-title">Dashboard shows your live data</div>
+        <div class="how-desc">Share your Sheet with the dashboard. Every chart, KPI card, and table instantly updates to show your firm's real numbers. Update the Sheet anytime — dashboard refreshes automatically.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div style="text-align:center;">
+    <div class="section-tag">Transparent pricing</div>
+    <h2 class="section-title">Simple plans for<br><em>every PMS firm</em></h2>
+    <p class="section-sub" style="margin:0 auto;">Start free. Pay only when you see value. No contracts, no lock-in.</p>
+  </div>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-tier">Starter</div>
+      <div class="price-amount"><span>₹</span>0</div>
+      <div class="price-period">Free during beta</div>
+      <ul class="price-features">
+        <li>Full dashboard access</li>
+        <li>Google Sheets connection</li>
+        <li>All 10 modules</li>
+        <li>5 years of data</li>
+        <li>Email support</li>
+      </ul>
+      <a href="#tester" class="price-cta price-cta-outline">Join Beta →</a>
+    </div>
+    <div class="price-card featured">
+      <div class="price-badge">MOST POPULAR</div>
+      <div class="price-tier">Pro</div>
+      <div class="price-amount"><span>₹</span>2,999</div>
+      <div class="price-period">per month · billed monthly</div>
+      <ul class="price-features">
+        <li>Everything in Starter</li>
+        <li>Your own branded dashboard URL</li>
+        <li>Auto-refresh every 24 hours</li>
+        <li>Priority WhatsApp support</li>
+        <li>Onboarding call included</li>
+        <li>Template customisation</li>
+      </ul>
+      <a href="payment.html" class="price-cta price-cta-gold">Get Started →</a>
+    </div>
+    <div class="price-card">
+      <div class="price-tier">Enterprise</div>
+      <div class="price-amount"><span>₹</span>9,999</div>
+      <div class="price-period">per month · custom setup</div>
+      <ul class="price-features">
+        <li>Everything in Pro</li>
+        <li>Direct database connection</li>
+        <li>Custom field mapping</li>
+        <li>White-label option</li>
+        <li>Dedicated account manager</li>
+        <li>Custom modules on request</li>
+      </ul>
+      <a href="mailto:hello@pmsdash.in" class="price-cta price-cta-outline">Contact Us →</a>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<div style="padding:0 40px;position:relative;z-index:1;">
+  <div class="testimonial-wrap">
+    <div class="t-quote">"We were spending 3 days every month building our P&L report in Excel. Now I open the dashboard and <em>everything is already there</em>. The cost coverage chart alone changed how we think about pricing."</div>
+    <div class="t-author">— <strong>Beta Tester, PMS Firm · Mumbai</strong> · Managing ₹850 Cr AUM</div>
+  </div>
+</div>
+
+<!-- CTA / SIGNUP -->
+<div class="cta-section" id="tester">
+  <div class="cta-glow"></div>
+  <h2>Ready to see your firm's<br><em>real numbers?</em></h2>
+  <p>Join as a beta tester — free access, full product, your real data connected in under 3 minutes.</p>
+  <div id="signupFormWrap">
+    <div class="tester-form" style="flex-direction:column;max-width:420px;gap:10px;">
+      <input type="email" id="emailInput" placeholder="Work email address *" required style="width:100%">
+      <input type="text"  id="firmInput"  placeholder="PMS firm name" style="width:100%;flex:unset;min-width:unset;">
+      <input type="tel"   id="phoneInput" placeholder="WhatsApp number (for onboarding)" style="width:100%;flex:unset;min-width:unset;">
+      <button id="betaBtn" onclick="joinBeta()" style="width:100%;padding:16px;font-size:15px;">Get Free Access →</button>
+    </div>
+    <p class="form-note" style="margin-top:12px;">Free during beta · No credit card · Template sent within 24 hrs</p>
+  </div>
+  <div class="success-msg" id="successMsg" style="max-width:480px;text-align:center;"></div>
+  <div style="margin-top:32px;">
+    <a href="product.html" class="btn-secondary" style="display:inline-block;">Or just explore the live demo first →</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PMS<span>ight</span></div>
+  <div class="footer-copy">© 2026 PMSight. Built for Indian PMS firms.</div>
+  <div class="footer-links">
+    <a href="product.html">Live Demo</a>
+    <a href="mailto:hello@pmsdash.in">Contact</a>
+  </div>
+</footer>
+
+<script>
+// ── Smooth scroll for all anchor links ──────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href');
+    const target = document.querySelector(id);
+    if (!target) return;
+    e.preventDefault();
+    const navH = document.querySelector('nav').offsetHeight;
+    window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY - navH - 16, behavior: 'smooth' });
+  });
+});
+
+// ── Active nav highlight on scroll ──────────────────────────
+const sections = ['features','how','pricing','tester'];
+const navLinks = document.querySelectorAll('.nav-links a');
+function setActiveNav() {
+  let current = '';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && window.scrollY >= el.offsetTop - 120) current = id;
+  });
+  navLinks.forEach(a => {
+    const isActive = a.getAttribute('href') === '#' + current;
+    a.style.color = isActive ? '#fff' : '';
+    a.style.fontWeight = isActive ? '600' : '';
+  });
+}
+window.addEventListener('scroll', setActiveNav, { passive: true });
+
+// ── Nav border + sticky bar on scroll ───────────────────────
+window.addEventListener('scroll', () => {
+  document.querySelector('nav').style.borderBottomColor =
+    window.scrollY > 60 ? 'rgba(201,168,76,.25)' : '';
+  const bar = document.getElementById('stickyBar');
+  if (bar) bar.style.transform = window.scrollY > 500 ? 'translateY(0)' : 'translateY(-100%)';
+}, { passive: true });
+
+// ── Google Form credentials (your real form) ─────────────────
+const GOOGLE_FORM_ACTION      = 'https://docs.google.com/forms/d/e/1FAIpQLSc1Tnbr_fVFIOvDUpVxhnzBbYciKHTd9jMKGwMuFjh_5SuWGA/formResponse';
+const GOOGLE_FORM_EMAIL_ENTRY = 'entry.1045781291';
+const GOOGLE_FORM_NAME_ENTRY  = 'entry.2005620554';
+const GOOGLE_FORM_PHONE_ENTRY = 'entry.1166974658';
+
+async function submitToGoogleForm(email, firm, phone) {
+  const body = new FormData();
+  body.append(GOOGLE_FORM_EMAIL_ENTRY, email);
+  body.append(GOOGLE_FORM_NAME_ENTRY,  firm  || 'Not provided');
+  body.append(GOOGLE_FORM_PHONE_ENTRY, phone || 'Not provided');
+  try {
+    await fetch(GOOGLE_FORM_ACTION, { method: 'POST', body, mode: 'no-cors' });
+  } catch(e) { /* no-cors always throws — submission goes through */ }
+}
+
+// ── Main signup form ─────────────────────────────────────────
+async function joinBeta() {
+  const emailEl = document.getElementById('emailInput');
+  const firmEl  = document.getElementById('firmInput');
+  const phoneEl = document.getElementById('phoneInput');
+  const email   = emailEl.value.trim();
+  const firm    = firmEl  ? firmEl.value.trim()  : '';
+  const phone   = phoneEl ? phoneEl.value.trim() : '';
+
+  if (!email || !email.includes('@')) {
+    emailEl.style.borderColor = '#f43f5e';
+    emailEl.focus();
+    emailEl.placeholder = 'Please enter a valid email';
+    return;
+  }
+  emailEl.style.borderColor = '';
+
+  const btn = document.getElementById('betaBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending\u2026'; }
+
+  await submitToGoogleForm(email, firm, phone);
+
+  setTimeout(() => {
+    document.getElementById('signupFormWrap').style.display = 'none';
+    const sm = document.getElementById('successMsg');
+    sm.style.display = 'block';
+    sm.innerHTML = `
+      <div style="font-size:28px;margin-bottom:12px;">&#10003;</div>
+      <div style="font-size:18px;font-weight:600;color:#fff;margin-bottom:8px;">You're in, ${firm || email.split('@')[0]}!</div>
+      <div style="font-size:14px;color:#94a3b8;margin-bottom:24px;line-height:1.7;">
+        Check your inbox — your Google Sheet template and setup guide are on their way.<br>
+        While you wait, explore the live demo below.
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="product.html" style="background:#c9a84c;color:#0a1628;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;">Open Live Dashboard &#8594;</a>
+        <a href="https://docs.google.com/spreadsheets/d/1LiXAUzpWsketf-niotAvp85KUNMz0vpTquAw4ax7WK4/copy" target="_blank"
+           style="background:transparent;color:#c9a84c;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none;border:1px solid rgba(201,168,76,.3);">
+          Get Your Sheet Template &#8594;
+        </a>
+      </div>`;
+  }, 800);
+}
+
+document.getElementById('emailInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') joinBeta();
+});
+
+// ── Sticky bar signup ────────────────────────────────────────
+async function joinBetaSticky() {
+  const emailEl = document.getElementById('stickyEmail');
+  const email   = emailEl.value.trim();
+  if (!email || !email.includes('@')) {
+    emailEl.style.borderColor = '#f43f5e';
+    emailEl.focus();
+    return;
+  }
+  emailEl.style.borderColor = '';
+  const btn = emailEl.nextElementSibling;
+  const orig = btn.textContent;
+  btn.textContent = 'Sending\u2026';
+  btn.disabled = true;
+  await submitToGoogleForm(email, '', '');
+  emailEl.value = '';
+  btn.textContent = '\u2713 You\'re in!';
+  btn.style.background = '#10b981';
+  setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.disabled = false; }, 3500);
+}
+
+// ── Animated counters ────────────────────────────────────────
+function animateCounter(el, target) {
+  const start = performance.now();
+  const update = now => {
+    const p = Math.min((now - start) / 1800, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(target * eased);
+    if (p < 1) requestAnimationFrame(update);
+    else el.textContent = target;
+  };
+  requestAnimationFrame(update);
+}
+const statsObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    animateCounter(document.getElementById('stat1'), 5);
+    animateCounter(document.getElementById('stat2'), 10);
+    statsObs.unobserve(e.target);
+  });
+}, { threshold: 0.5 });
+const statsBar = document.querySelector('.stats-bar');
+if (statsBar) statsObs.observe(statsBar);
+</script>
+</body>
+</html>
